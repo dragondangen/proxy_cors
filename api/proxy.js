@@ -1,34 +1,23 @@
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
-    // Разрешаем CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type'); // <-- важно
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
     const { url } = req.query;
-    if (!url) {
-        return res.status(400).send('Missing url parameter');
+    if (!url) return res.status(400).send('Missing url');
+
+    const headers = {
+        'User-Agent': 'Mozilla/5.0...',
+        'Accept': 'application/json',
+    };
+    if (req.headers.authorization) {
+        headers['Authorization'] = req.headers.authorization;
     }
 
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
-            }
-        });
-        
-        const text = await response.text();
-        res.setHeader('Content-Type', response.headers.get('content-type') || 'text/html');
-        res.send(text);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send(error.toString());
-    }
+    const response = await fetch(url, { headers });
+    const text = await response.text();
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
+    res.send(text);
 };
