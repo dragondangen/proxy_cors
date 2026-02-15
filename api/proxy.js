@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
         const executablePath = await chromium.executablePath();
         
         browser = await puppeteer.launch({
-            args: chromium.args,
+            args: [...chromium.args, '--disable-dev-shm-usage', '--no-sandbox', '--disable-setuid-sandbox'],
             defaultViewport: { width: 1280, height: 800 },
             executablePath: executablePath,
             headless: chromium.headless,
@@ -28,16 +28,12 @@ module.exports = async (req, res) => {
         });
 
         const page = await browser.newPage();
-   
         await page.setExtraHTTPHeaders({
             'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         });
-
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 10000 });
-        await page.waitForTimeout(2000);
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 8000 });
         const html = await page.content();
-
         res.send(html);
     } catch (error) {
         console.error(error);
